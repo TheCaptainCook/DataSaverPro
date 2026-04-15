@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DataSaver Pro</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --bg:     #07090f;
+      --s1:     #0d1020;
+      --s2:     #121528;
+      --s3:     #181c30;
+      --border: rgba(79,110,247,0.18);
+      --b2:     rgba(79,110,247,0.32);
+      --accent: #4f6ef7;
+      --green:  #22d98a;
+      --red:    #f74f6e;
+      --yellow: #f7b900;
+      --purple: #a855f7;
+      --teal:   #22d5d9;
+      --txt:    #8890b8;
+      --txb:    #dde0ff;
+      --txd:    #3a3f60;
+      --mono:   'Courier New', Courier, monospace;
+    }
+    [data-theme="light"] {
+      --bg:     #f4f5fb;
+      --s1:     #ffffff;
+      --s2:     #eef0f8;
+      --s3:     #e4e6f2;
+      --border: rgba(79,110,247,0.14);
+      --b2:     rgba(79,110,247,0.26);
+      --txt:    #555880;
+      --txb:    #111230;
+      --txd:    #a0a6c0;
+    }
+
+    html, body { width:380px; height:570px; overflow:hidden; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+
+    .shell { width:380px; height:570px; display:flex; flex-direction:column; overflow:hidden; }
+
+    /* ══ HEADER ══ */
+    .hdr {
+      background:var(--s1); border-bottom:1px solid var(--border);
+      padding:10px 14px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .logo { display:flex; align-items:center; gap:8px; }
+    .logo-ico {
+      width:28px; height:28px; background:linear-gradient(135deg,#1e2e88,var(--accent));
+      border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .logo-ico svg { width:15px; height:15px; }
+    .logo-name { font-size:14px; font-weight:700; color:var(--txb); }
+    .pro-badge {
+      background:rgba(34,217,138,0.14); border:1px solid rgba(34,217,138,0.35);
+      color:var(--green); font-size:8px; font-weight:800; padding:2px 5px;
+      border-radius:3px; letter-spacing:1px; font-family:var(--mono);
+    }
+    .hdr-right { display:flex; align-items:center; gap:7px; }
+
+    /* Master ON/OFF pill */
+    .master-pill {
+      background:rgba(34,217,138,0.15); border:1px solid rgba(34,217,138,0.4);
+      color:var(--green); font-size:10px; font-weight:800;
+      padding:4px 11px; border-radius:20px; cursor:pointer;
+      transition:all .18s; letter-spacing:0.5px; font-family:var(--mono);
+    }
+    .master-pill.off { background:rgba(247,79,110,0.1); border-color:rgba(247,79,110,0.3); color:var(--red); }
+
+    /* Theme btn — SVG icons */
+    .theme-btn {
+      width:28px; height:28px; background:var(--s2); border:1px solid var(--border);
+      border-radius:6px; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; transition:all .18s; color:var(--txt);
+    }
+    .theme-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .theme-btn svg { width:13px; height:13px; }
+
+    /* ══ SITE ROW ══ */
+    .site-row {
+      background:var(--s2); border-bottom:1px solid var(--border);
+      padding:7px 14px; display:flex; align-items:center;
+      justify-content:space-between; flex-shrink:0; transition:opacity .2s;
+    }
+    .site-row.disabled-state { opacity:.45; pointer-events:none; }
+    .site-row-info { display:flex; flex-direction:column; gap:1px; }
+    .site-row-sup { font-size:9px; color:var(--txd); font-family:var(--mono); }
+    .site-row-label { font-size:12px; font-weight:600; color:var(--txb); }
+
+    /* ══ TOGGLE ══ */
+    .toggle { position:relative; display:inline-flex; cursor:pointer; }
+    .toggle input { display:none; }
+    .slider {
+      width:38px; height:22px; background:var(--s3); border-radius:11px;
+      display:inline-block; position:relative; border:1px solid var(--border); transition:background .2s;
+    }
+    .slider::after {
+      content:""; position:absolute; width:18px; height:18px;
+      background:#fff; border-radius:50%; top:2px; left:2px;
+      transition:left .2s; box-shadow:0 1px 4px rgba(0,0,0,.35);
+    }
+    .toggle input:checked + .slider { background:var(--accent); border-color:var(--accent); }
+    .toggle input:checked + .slider::after { left:18px; }
+
+    /* ══ GLOBAL-OFF OVERLAY ══ */
+    .global-off-banner {
+      background:rgba(247,79,110,0.08); border-bottom:1px solid rgba(247,79,110,0.2);
+      color:var(--red); padding:5px 14px; font-size:10px; font-family:var(--mono);
+      font-weight:700; letter-spacing:0.5px; text-align:center;
+      display:none; flex-shrink:0;
+    }
+    .global-off-banner.show { display:block; }
+
+    /* ══ TABS ══ */
+    .tabs { display:flex; background:var(--s1); border-bottom:1px solid var(--border); flex-shrink:0; }
+    .tab {
+      flex:1; padding:9px 6px; background:transparent; border:none;
+      border-bottom:2px solid transparent; color:var(--txt);
+      font-size:10px; font-weight:700; font-family:var(--mono);
+      cursor:pointer; transition:all .18s; letter-spacing:0.5px;
+      text-align:center; display:flex; align-items:center; justify-content:center; gap:5px;
+    }
+    .tab svg { width:11px; height:11px; flex-shrink:0; }
+    .tab:hover { color:var(--txb); background:var(--s2); }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+    /* ══ CONTENT ══ */
+    .content { flex:1; overflow-y:auto; overflow-x:hidden; min-height:0; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+    .content::-webkit-scrollbar { width:4px; }
+    .content::-webkit-scrollbar-track { background:transparent; }
+    .content::-webkit-scrollbar-thumb { background:var(--b2); border-radius:2px; }
+
+    /* ══ SITE-DISABLED DIMMER ══ */
+    .opts-disabled .opt-item { opacity:.35; pointer-events:none; }
+    .opts-disabled .opt-item .opt-title::after {
+      content:" (site off)"; font-size:9px; color:var(--txd); font-weight:400;
+    }
+
+    /* ══ OPTIONS ══ */
+    .opt-item {
+      display:flex; align-items:center; gap:11px;
+      padding:10px 14px; border-bottom:1px solid var(--border);
+      transition:background .14s, opacity .2s;
+    }
+    .opt-item:last-child { border-bottom:none; }
+    .opt-item:hover { background:rgba(79,110,247,0.04); }
+
+    .opt-ico {
+      width:33px; height:33px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .opt-ico svg { width:16px; height:16px; }
+    .ic-img    { background:rgba(168,85,247,0.18); color:#a855f7; }
+    .ic-vid    { background:rgba(247,79,110,0.15); color:#f74f6e; }
+    .ic-heavy  { background:rgba(247,185,0,0.15);  color:#f7b900; }
+    .ic-script { background:rgba(79,110,247,0.15); color:var(--accent); }
+    .ic-embed  { background:rgba(34,213,217,0.15); color:var(--teal); }
+    .ic-rm     { background:rgba(247,79,110,0.12); color:#f74f6e; }
+
+    .opt-text { flex:1; min-width:0; }
+    .opt-title { font-size:12px; font-weight:700; color:var(--txb); margin-bottom:2px; }
+    .opt-desc  { font-size:10px; color:var(--txt); }
+
+    /* Blocked counter per row */
+    .opt-cnt {
+      font-size:11px; font-weight:800; font-family:var(--mono);
+      color:var(--txd); min-width:22px; text-align:right; flex-shrink:0;
+    }
+    .opt-cnt.lit { color:var(--green); }
+
+    .opt-sep { color:var(--txd); font-size:14px; flex-shrink:0; padding:0 2px; }
+
+    /* ══ LIVE LOG ══ */
+    .log-bar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 14px 6px;
+    }
+    .log-bar-left { display:flex; align-items:center; gap:8px; }
+    .log-bar-title { font-family:var(--mono); font-size:9px; font-weight:700; color:var(--txd); letter-spacing:1.5px; }
+    .log-pill {
+      background:var(--accent); color:#fff;
+      font-size:9px; font-weight:800; font-family:var(--mono);
+      padding:2px 7px; border-radius:10px; display:none;
+    }
+    .log-pill.show { display:inline-block; }
+
+    .log-refresh {
+      background:var(--s3); border:1px solid var(--border); color:var(--txt);
+      font-size:9px; font-weight:700; font-family:var(--mono);
+      padding:4px 10px; border-radius:4px; cursor:pointer;
+      transition:all .15s; display:flex; align-items:center; gap:5px; letter-spacing:0.5px;
+    }
+    .log-refresh:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .log-refresh svg { width:11px; height:11px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .spinning { animation:spin .5s linear infinite; }
+
+    .log-list { padding:0 14px 10px; }
+
+    .log-item {
+      display:flex; align-items:center; gap:8px;
+      background:var(--s2); border:1px solid var(--border);
+      border-radius:6px; padding:6px 10px; margin-bottom:5px;
+    }
+    .log-badge {
+      font-size:8px; font-weight:800; font-family:var(--mono);
+      padding:2px 6px; border-radius:3px; letter-spacing:0.5px;
+      flex-shrink:0; text-transform:uppercase;
+    }
+    .lb-image  { background:rgba(168,85,247,0.15); color:#a855f7; }
+    .lb-video  { background:rgba(247,79,110,0.12); color:#f74f6e; }
+    .lb-audio  { background:rgba(247,79,110,0.08); color:#f74f6e; }
+    .lb-heavy  { background:rgba(247,185,0,0.12);  color:#f7b900; }
+    .lb-script { background:rgba(79,110,247,0.15); color:var(--accent); }
+    .lb-iframe { background:rgba(34,213,217,0.12); color:var(--teal); }
+
+    .log-url {
+      flex:1; font-size:10px; color:var(--txt);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .log-ts {
+      font-size:8px; color:var(--txd); font-family:var(--mono);
+      flex-shrink:0; white-space:nowrap;
+    }
+
+    .log-allow {
+      background:rgba(34,217,138,0.1); border:1px solid rgba(34,217,138,0.3);
+      color:var(--green); font-size:8px; font-weight:700; font-family:var(--mono);
+      padding:3px 6px; border-radius:4px; cursor:pointer;
+      transition:all .15s; letter-spacing:0.5px; flex-shrink:0;
+    }
+    .log-allow:hover { background:var(--green); color:#fff; border-color:var(--green); }
+    .log-allow:disabled { opacity:0.5; cursor:not-allowed; border-color:transparent; }
+
+    .log-empty { text-align:center; padding:30px 20px 10px; }
+    .log-empty-ico {
+      width:42px; height:42px; margin:0 auto 10px;
+      background:var(--s2); border:1px solid var(--border); border-radius:10px;
+      display:flex; align-items:center; justify-content:center; color:var(--txd);
+    }
+    .log-empty-ico svg { width:20px; height:20px; }
+    .log-empty p { font-size:12px; font-weight:600; color:var(--txt); margin-bottom:5px; }
+    .log-empty small { font-size:10px; color:var(--txd); }
+
+    /* ══ FOOTER ══ */
+    .footer {
+      background:var(--s1); border-top:1px solid var(--border);
+      padding:9px 14px 10px; flex-shrink:0;
+    }
+    .ds-row { display:flex; align-items:center; gap:7px; margin-bottom:8px; }
+    .ds-lbl { font-size:8px; font-weight:700; font-family:var(--mono); color:var(--txd); letter-spacing:0.8px; white-space:nowrap; }
+    .progress-track { flex:1; height:5px; background:var(--s3); border-radius:3px; overflow:hidden; }
+    .progress-fill  { height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); border-radius:3px; transition:width .5s ease; width:0%; }
+    .ds-pct  { font-size:10px; font-weight:700; font-family:var(--mono); color:var(--green); white-space:nowrap; }
+    .ds-div  { width:1px; height:16px; background:var(--border); flex-shrink:0; }
+    .ds-page { display:flex; flex-direction:column; align-items:flex-end; flex-shrink:0; line-height:1.1; }
+    .ds-page-n { font-size:14px; font-weight:800; font-family:var(--mono); color:var(--txb); }
+    .ds-page-l { font-size:8px; color:var(--txd); font-family:var(--mono); }
+
+    .footer-btns { display:flex; gap:7px; }
+    .fbtn {
+      flex:1; padding:8px 6px;
+      background:linear-gradient(135deg,var(--s3),var(--s2));
+      border:1px solid var(--border); border-radius:6px;
+      color:var(--txt); font-size:10px; font-weight:700; font-family:var(--mono);
+      cursor:pointer; letter-spacing:0.3px; transition:all .18s;
+      display:flex; align-items:center; justify-content:center; gap:5px; white-space:nowrap;
+    }
+    .fbtn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .fbtn svg { width:12px; height:12px; flex-shrink:0; }
+    .fbtn.primary { background:linear-gradient(135deg,#141d50,#1c2870); border-color:rgba(79,110,247,0.4); color:var(--txb); flex:2; }
+    .fbtn.primary:hover { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+    /* ══ LICENSE BAR ══ */
+    .license-bar {
+      border-bottom:1px solid var(--border);
+      padding:5px 14px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+      transition:all .3s;
+    }
+    .license-bar.trial {
+      background:linear-gradient(90deg, rgba(79,110,247,0.08), rgba(34,217,138,0.08));
+    }
+    .license-bar.active {
+      background:linear-gradient(90deg, rgba(34,217,138,0.10), rgba(34,217,138,0.04));
+    }
+    .license-bar.expired {
+      background:linear-gradient(90deg, rgba(247,79,110,0.10), rgba(247,79,110,0.04));
+      cursor:pointer;
+    }
+    .license-bar-left { display:flex; align-items:center; gap:6px; }
+    .license-bar-icon { font-size:10px; }
+    .license-bar-text { font-family:var(--mono); font-size:9px; color:var(--txt); letter-spacing:0.3px; }
+    .license-bar-days { font-weight:800; color:var(--green); }
+    .license-bar-days.warning { color:var(--yellow); }
+    .license-bar-days.expired { color:var(--red); }
+    .license-bar-track { width:60px; height:3px; background:var(--s3); border-radius:2px; overflow:hidden; }
+    .license-bar-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--accent)); border-radius:2px; transition:width .4s; }
+    .license-bar-badge {
+      font-family:var(--mono); font-size:8px; font-weight:800; letter-spacing:0.5px;
+      padding:2px 7px; border-radius:3px;
+    }
+    .license-bar-badge.licensed {
+      background:rgba(34,217,138,0.14); border:1px solid rgba(34,217,138,0.35); color:var(--green);
+    }
+    .license-bar-badge.expired-badge {
+      background:rgba(247,79,110,0.12); border:1px solid rgba(247,79,110,0.3); color:var(--red);
+    }
+    .license-activate-link {
+      font-family:var(--mono); font-size:8px; font-weight:700;
+      color:var(--accent); cursor:pointer; text-decoration:underline;
+      background:none; border:none; letter-spacing:0.3px;
+    }
+    .license-activate-link:hover { color:var(--green); }
+
+    /* ══ LICENSE MODAL ══ */
+    .license-modal-overlay {
+      display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+      background:rgba(0,0,0,0.7); z-index:100;
+      align-items:center; justify-content:center;
+    }
+    .license-modal-overlay.show { display:flex; }
+    .license-modal {
+      background:var(--s1); border:1px solid var(--b2); border-radius:12px;
+      width:340px; padding:20px; position:relative;
+      box-shadow:0 8px 32px rgba(0,0,0,0.4);
+    }
+    .license-modal::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:linear-gradient(90deg,var(--accent),var(--green)); border-radius:12px 12px 0 0;
+    }
+    .lm-close {
+      position:absolute; top:10px; right:14px;
+      background:none; border:none; color:var(--txd); font-size:18px; cursor:pointer;
+      transition:color .15s;
+    }
+    .lm-close:hover { color:var(--red); }
+    .lm-title {
+      font-family:var(--mono); font-size:13px; font-weight:700;
+      color:var(--txb); margin-bottom:4px;
+    }
+    .lm-sub { font-size:10px; color:var(--txt); margin-bottom:16px; }
+    .lm-input {
+      width:100%; padding:10px 12px;
+      background:var(--s2); border:1px solid var(--border); border-radius:6px;
+      color:var(--txb); font-family:var(--mono); font-size:12px;
+      outline:none; margin-bottom:8px; transition:border-color .2s;
+    }
+    .lm-input:focus { border-color:var(--accent); }
+    .lm-input::placeholder { color:var(--txd); }
+    .lm-btn {
+      width:100%; padding:10px;
+      background:linear-gradient(135deg,#1c2870,var(--accent));
+      border:1px solid rgba(79,110,247,0.4); border-radius:8px;
+      color:#fff; font-family:var(--mono); font-size:11px; font-weight:700;
+      letter-spacing:0.5px; cursor:pointer; transition:all .2s;
+      margin-bottom:8px;
+    }
+    .lm-btn:hover { background:var(--accent); transform:translateY(-1px); }
+    .lm-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+    .lm-buy {
+      display:block; text-align:center; font-family:var(--mono);
+      font-size:9px; color:var(--txd); text-decoration:none;
+      transition:color .15s; letter-spacing:0.3px;
+    }
+    .lm-buy:hover { color:var(--accent); }
+    .lm-msg {
+      font-family:var(--mono); font-size:9px; text-align:center;
+      padding:6px 0 2px; display:none;
+    }
+    .lm-msg.error { color:var(--red); display:block; }
+    .lm-msg.success { color:var(--green); display:block; }
+    .lm-rate-limit {
+      font-family:var(--mono); font-size:8px; color:var(--yellow);
+      text-align:center; padding:4px 0; display:none;
+    }
+    .lm-rate-limit.show { display:block; }
+
+    /* ══ EXPIRED OVERLAY ══ */
+    /* ══ EXPIRED NOTICE (non-blocking strip — replaces old full-screen overlay) ══ */
+    .expired-overlay {
+      display:none; flex-direction:row; align-items:center; justify-content:space-between;
+      background:linear-gradient(90deg, rgba(247,79,110,0.13), rgba(247,79,110,0.06));
+      border-bottom:1px solid rgba(247,79,110,0.28);
+      padding:7px 14px; gap:8px; flex-shrink:0;
+    }
+    .expired-overlay.show { display:flex; }
+    .exp-icon { font-size:13px; flex-shrink:0; }
+    .exp-title {
+      font-family:var(--mono); font-size:9px; font-weight:700;
+      color:var(--red); letter-spacing:0.3px; flex:1;
+    }
+    .exp-sub { display:none; } /* not needed in strip layout */
+    .exp-btn {
+      padding:4px 10px;
+      background:rgba(247,79,110,0.14);
+      border:1px solid rgba(247,79,110,0.4); border-radius:4px;
+      color:var(--red); font-family:var(--mono); font-size:8px; font-weight:700;
+      letter-spacing:0.4px; cursor:pointer; transition:all .2s; white-space:nowrap;
+    }
+    .exp-btn:hover { background:var(--red); color:#fff; }
+    .exp-link {
+      font-family:var(--mono); font-size:8px; color:var(--txd);
+      cursor:pointer; background:none; border:none;
+      text-decoration:underline; transition:color .15s; white-space:nowrap;
+    }
+    .exp-link:hover { color:var(--accent); }
+
+    /* ══ PRIVACY NOTE ══ */
+    .privacy-note {
+      padding:4px 14px 5px; text-align:center;
+      font-family:var(--mono); font-size:7px; color:var(--txd);
+      letter-spacing:0.4px; border-top:1px solid var(--border); flex-shrink:0;
+    }
+    .privacy-note svg { width:8px; height:8px; vertical-align:-1px; margin-right:3px; }
+
+    /* ══ UPDATE BANNER ══ */
+    .update-banner {
+      display:none; flex-shrink:0;
+      background:linear-gradient(90deg, rgba(79,110,247,0.12), rgba(168,85,247,0.12));
+      border-bottom:1px solid rgba(168,85,247,0.25);
+      padding:6px 14px; align-items:center; justify-content:space-between;
+      animation:updatePulse 3s ease-in-out infinite;
+    }
+    .update-banner.show { display:flex; }
+    @keyframes updatePulse {
+      0%,100% { background:linear-gradient(90deg, rgba(79,110,247,0.12), rgba(168,85,247,0.12)); }
+      50% { background:linear-gradient(90deg, rgba(79,110,247,0.18), rgba(168,85,247,0.18)); }
+    }
+    .update-banner-left { display:flex; align-items:center; gap:6px; }
+    .update-banner-icon { font-size:11px; }
+    .update-banner-text {
+      font-family:var(--mono); font-size:9px; color:var(--purple);
+      font-weight:700; letter-spacing:0.3px;
+    }
+    .update-banner-ver {
+      font-family:var(--mono); font-size:8px; color:var(--txd); margin-left:4px;
+    }
+    .update-banner-btns { display:flex; align-items:center; gap:6px; }
+    .update-btn {
+      font-family:var(--mono); font-size:8px; font-weight:700; letter-spacing:0.3px;
+      padding:3px 8px; border-radius:4px; cursor:pointer; transition:all .15s;
+      border:1px solid rgba(168,85,247,0.3); background:rgba(168,85,247,0.12); color:var(--purple);
+    }
+    .update-btn:hover { background:var(--purple); color:#fff; border-color:var(--purple); }
+    .update-dismiss {
+      background:none; border:none; color:var(--txd); font-size:14px;
+      cursor:pointer; padding:0 2px; transition:color .15s;
+    }
+    .update-dismiss:hover { color:var(--red); }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="logo">
+      <div class="logo-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="logo-name">DataSaver</span>
+      <span class="pro-badge">PRO</span>
+    </div>
+    <div class="hdr-right">
+      <button class="master-pill" id="masterPill">ON</button>
+      <button class="theme-btn" id="themeToggle" title="Toggle theme">
+        <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg id="themeIconSun" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg id="themeIconSystem" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- GLOBAL OFF BANNER -->
+  <div class="global-off-banner" id="globalOffBanner">⏸ DataSaver is OFF — click ON to re-enable</div>
+
+  <!-- UPDATE BANNER (shown when new version available) -->
+  <div class="update-banner" id="updateBanner">
+    <div class="update-banner-left">
+      <span class="update-banner-icon">🚀</span>
+      <span class="update-banner-text" id="updateText">Update available</span>
+      <span class="update-banner-ver" id="updateVer"></span>
+    </div>
+    <div class="update-banner-btns">
+      <button class="update-btn" id="updateBtn">UPDATE</button>
+      <button class="update-dismiss" id="updateDismiss">&times;</button>
+    </div>
+  </div>
+
+  <!-- LICENSE STATUS BAR (dynamic — filled by JS) -->
+  <div class="license-bar trial" id="licenseBar">
+    <div class="license-bar-left">
+      <span class="license-bar-icon">⏱</span>
+      <span class="license-bar-text" id="licenseBarText">Free Trial: <span class="license-bar-days" id="licenseDays">30</span> days left</span>
+    </div>
+    <div id="licenseBarRight">
+      <div class="license-bar-track"><div class="license-bar-fill" id="licenseFill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <!-- SITE ROW -->
+  <div class="site-row" id="siteRow">
+    <div class="site-row-info">
+      <span class="site-row-sup">extensions</span>
+      <span class="site-row-label">Active on this site</span>
+    </div>
+    <label class="toggle">
+      <input type="checkbox" id="siteEnabled" checked />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="options">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+      </svg>
+      OPTIONS
+    </button>
+    <button class="tab" data-tab="log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      LIVE LOG
+    </button>
+  </div>
+
+  <!-- EXPIRED NOTICE STRIP (non-blocking; sits above content in flex flow) -->
+  <div class="expired-overlay" id="expiredOverlay">
+    <span class="exp-icon">⚠️</span>
+    <span class="exp-title">Trial expired — blocking paused</span>
+    <button class="exp-btn" id="expActivateBtn">ACTIVATE</button>
+    <button class="exp-link" id="expBuyBtn">Buy →</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- OPTIONS TAB -->
+    <div class="tab-panel active" data-tab="options">
+      <div id="optsList">
+
+        <div class="opt-item">
+          <div class="opt-ico ic-img">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </div>
+          <div class="opt-text">
+            <div class="opt-title">Images</div>
+            <div class="opt-desc">PNG · JPG · GIF · WebP</div>
+          </div>
+          <span class="opt-cnt" id="cnt-images">—</span>
+          <span class="opt-sep">—</span>
+          <label class="toggle"><input type="checkbox" id="blockImages" checked/><span class="slider"></span></label>
+        </div>
+
+        <div class="opt-item">
+          <div class="opt-ico ic-vid">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 10l4.55-2.07A1 1 0 0 1 21 8.87v6.26a1 1 0 0 1-1.45.9L15 14v-4z"/>
+              <rect x="1" y="6" width="15" height="12" rx="2"/>
+            </svg>
+          </div>
+          <div class="opt-text">
+            <div class="opt-title">Video &amp; Audio</div>
+            <div class="opt-desc">HTML5 · YouTube · Vimeo</div>
+          </div>
+          <span class="opt-cnt" id="cnt-videos">—</span>
+          <span class="opt-sep">—</span>
+          <label class="toggle"><input type="checkbox" id="blockVideos" checked/><span class="slider"></span></label>
+        </div>
+
+        <div class="opt-item">
+          <div class="opt-ico ic-heavy">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <div class="opt-text">
+            <div class="opt-title">Heavy Content</div>
+            <div class="opt-desc">Fonts · CDN assets · GIFs</div>
+          </div>
+          <span class="opt-cnt" id="cnt-heavy">—</span>
+          <span class="opt-sep">—</span>
+          <label class="toggle"><input type="checkbox" id="blockHeavy" checked/><span class="slider"></span></label>
+        </div>
+
+        <div class="opt-item">
+          <div class="opt-ico ic-script">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <div class="opt-text">
+            <div class="opt-title">3rd-Party Scripts</div>
+            <div class="opt-desc">Analytics · ads · trackers</div>
+          </div>
+          <span class="opt-cnt" id="cnt-scripts">—</span>
+          <span class="opt-sep">—</span>
+          <label class="toggle"><input type="checkbox" id="blockScripts"/><span class="slider"></span></label>
+        </div>
+
+        <div class="opt-item">
+          <div class="opt-ico ic-embed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          <div class="opt-text">
+            <div class="opt-title">Iframes &amp; Embeds</div>
+            <div class="opt-desc">Ad frames · external widgets</div>
+          </div>
+          <span class="opt-cnt" id="cnt-iframes">—</span>
+          <span class="opt-sep">—</span>
+          <label class="toggle"><input type="checkbox" id="blockIframes"/><span class="slider"></span></label>
+        </div>
+
+        <div class="opt-item">
+          <div class="opt-ico ic-rm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </div>
+          <div class="opt-text">
+            <div class="opt-title">Remove Blocked</div>
+            <div class="opt-desc">Delete elements instead of placeholder</div>
+          </div>
+          <span class="opt-sep">—</span>
+          <label class="toggle"><input type="checkbox" id="removeBlocked"/><span class="slider"></span></label>
+        </div>
+
+      </div><!-- /optsList -->
+    </div>
+
+    <!-- LIVE LOG TAB -->
+    <div class="tab-panel" data-tab="log">
+      <div class="log-bar">
+        <div class="log-bar-left">
+          <span class="log-bar-title">BLOCKED THIS PAGE</span>
+          <span class="log-pill" id="logPill">0</span>
+        </div>
+        <button class="log-refresh" id="logRefresh">
+          <svg id="refreshIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          REFRESH
+        </button>
+      </div>
+      <div class="log-list" id="logList"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="ds-row">
+      <span class="ds-lbl">EST. DATA SAVED</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <span class="ds-pct" id="progressPct">0%</span>
+      <div class="ds-div"></div>
+      <div class="ds-page">
+        <span class="ds-page-n" id="pageNum">0</span>
+        <span class="ds-page-l">this page</span>
+      </div>
+    </div>
+    <div class="footer-btns">
+      <button class="fbtn" id="profileBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        PROFILE
+      </button>
+      <button class="fbtn primary" id="statsBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        LIFETIME STATS →
+      </button>
+    </div>
+  </div>
+
+  <!-- PRIVACY NOTE -->
+  <div class="privacy-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    YOUR DATA IS 100% LOCAL — NO SERVERS, NO TRACKING, NO DATA HARVESTING
+  </div>
+
+</div>
+
+<!-- LICENSE ACTIVATION MODAL -->
+<div class="license-modal-overlay" id="licenseModal">
+  <div class="license-modal">
+    <button class="lm-close" id="lmClose">&times;</button>
+    <div class="lm-title">Activate License</div>
+    <div class="lm-sub">Enter your Gumroad license key below to unlock DataSaver Pro.</div>
+    <div class="lm-rate-limit" id="lmRateLimit"></div>
+    <input class="lm-input" id="lmKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" />
+    <div class="lm-msg" id="lmMsg"></div>
+    <button class="lm-btn" id="lmActivateBtn">ACTIVATE</button>
+    <a class="lm-buy" id="lmBuyLink" href="#" target="_blank">Don't have a key? Purchase a license →</a>
+  </div>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>DataSaver Pro — Stats</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #07070e;
+    --s1:      #0d0d1c;
+    --s2:      #111126;
+    --s3:      #16162e;
+    --border:  #1e1e38;
+    --b2:      #252545;
+    --accent:  #4f6ef7;
+    --ag:      rgba(79,110,247,0.12);
+    --green:   #22d98a;
+    --gd:      rgba(34,217,138,0.10);
+    --red:     #f74f6e;
+    --rd:      rgba(247,79,110,0.10);
+    --yellow:  #f7b900;
+    --yd:      rgba(247,185,0,0.10);
+    --purple:  #a855f7;
+    --pd:      rgba(168,85,247,0.10);
+    --teal:    #22d5d9;
+    --txt:     #a8a8cc;
+    --txd:     #40405e;
+    --txb:     #eeeeff;
+    --mono:    'Courier New', monospace;
+  }
+
+  [data-theme="light"] {
+    --bg:      #f0f1f8;
+    --s1:      #ffffff;
+    --s2:      #e8eaf4;
+    --s3:      #dcdff0;
+    --border:  rgba(60,70,140,0.15);
+    --b2:      #c0c5de;
+    --ag:      rgba(79,110,247,0.08);
+    --gd:      rgba(34,217,138,0.08);
+    --rd:      rgba(247,79,110,0.08);
+    --yd:      rgba(247,185,0,0.08);
+    --pd:      rgba(168,85,247,0.08);
+    --txt:     #3d4065;
+    --txd:     #6b7099;
+    --txb:     #0e0f28;
+  }
+
+  body {
+    background: var(--bg); color: var(--txt);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh; padding-bottom: 48px;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--s1); border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between; height: 56px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg,#2a3a8a,var(--accent));
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-name { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--txb); }
+  .logo-page { font-family: var(--mono); font-size: 10px; color: var(--txd); letter-spacing: 1px; text-transform: uppercase; }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .reset-btn {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--txd); background: none; border: 1px solid var(--border); border-radius: 4px;
+    cursor: pointer; padding: 5px 12px; transition: all .18s;
+  }
+  .reset-btn:hover { color: var(--red); border-color: rgba(247,79,110,.3); }
+
+  .theme-toggle {
+    background: var(--s2);
+    border: 1px solid var(--border);
+    color: var(--txt);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .theme-toggle svg { width: 14px; height: 14px; }
+
+  .theme-toggle:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .installed-since { font-family: var(--mono); font-size: 9px; color: var(--txd); }
+
+  /* ── LAYOUT ── */
+  .page { max-width: 860px; margin: 0 auto; padding: 32px 24px; }
+
+  .section-title {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--txd); margin-bottom: 14px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── HERO CARDS ── */
+  .hero-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px;
+  }
+
+  .hero-card {
+    background: var(--s1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px;
+    position: relative; overflow: hidden;
+  }
+  .hero-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent-color, var(--accent));
+  }
+
+  .hero-label { font-family: var(--mono); font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--txd); margin-bottom: 8px; }
+  .hero-num {
+    font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--txb); line-height: 1;
+  }
+  .hero-sub { font-family: var(--mono); font-size: 9px; color: var(--txd); margin-top: 4px; }
+
+  /* ── BREAKDOWN GRID ── */
+  .breakdown-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 28px;
+  }
+
+  .bk-card {
+    background: var(--s2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 12px; text-align: center;
+  }
+  .bk-icon { font-size: 18px; margin-bottom: 6px; }
+  .bk-num { font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--txb); }
+  .bk-label { font-family: var(--mono); font-size: 8px; color: var(--txd); letter-spacing: .5px; margin-top: 3px; }
+
+  /* ── TODAY SECTION ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+
+  .card {
+    background: var(--s1); border: 1px solid var(--border); border-radius: 10px; padding: 18px;
+  }
+
+  /* ── MINI BAR CHART (history) ── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .bc-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bc-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+    background: linear-gradient(180deg, var(--accent), #2a3a8a);
+    min-height: 3px; transition: height .4s;
+    cursor: default;
+    position: relative;
+  }
+  .bc-bar:hover::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%);
+    background: var(--s3); border: 1px solid var(--b2); border-radius: 4px;
+    font-family: var(--mono); font-size: 9px; color: var(--txb);
+    white-space: nowrap; padding: 3px 6px; pointer-events: none;
+  }
+  .bc-label { font-family: var(--mono); font-size: 7px; color: var(--txd); }
+
+  /* ── TODAY BREAKDOWN ── */
+  .today-rows { display: flex; flex-direction: column; gap: 8px; }
+
+  .trow { display: flex; align-items: center; gap: 10px; }
+  .trow-icon { font-size: 13px; width: 20px; text-align: center; }
+  .trow-label { font-size: 11px; color: var(--txt); flex: 1; }
+  .trow-track { flex: 2; height: 4px; background: var(--s3); border-radius: 4px; overflow: hidden; }
+  .trow-fill { height: 100%; border-radius: 4px; transition: width .5s; }
+  .trow-num { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--txb); min-width: 28px; text-align: right; }
+
+  /* ── TOP SITES ── */
+  .sites-list { display: flex; flex-direction: column; gap: 6px; }
+  .site-row { display: flex; align-items: center; gap: 10px; }
+  .site-rank { font-family: var(--mono); font-size: 9px; color: var(--txd); width: 16px; text-align: right; }
+  .site-name { font-family: var(--mono); font-size: 11px; color: var(--txt); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .site-track { flex: 1; height: 3px; background: var(--s3); border-radius: 3px; overflow: hidden; }
+  .site-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; }
+  .site-num { font-family: var(--mono); font-size: 10px; color: var(--accent); min-width: 28px; text-align: right; }
+
+  .empty-state { font-family: var(--mono); font-size: 10px; color: var(--txd); text-align: center; padding: 20px 0; }
+
+  /* ── SAVINGS ESTIMATE ── */
+  .savings-card {
+    background: linear-gradient(135deg, #0d0d2a, #111130);
+    border: 1px solid rgba(79,110,247,0.2); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 28px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  [data-theme="light"] .savings-card {
+    background: linear-gradient(135deg, #e8eafc, #dfe2f8);
+    border-color: rgba(79,110,247,0.18);
+  }
+  .sav-main { flex: 1; }
+  .sav-title { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--txd); margin-bottom: 4px; }
+  .sav-num { font-family: var(--mono); font-size: 40px; font-weight: 700; color: var(--green); line-height: 1; }
+  .sav-sub { font-size: 11px; color: var(--txd); margin-top: 4px; }
+
+  .sav-breakdown { display: flex; gap: 20px; }
+  .sav-item { text-align: center; }
+  .sav-item-num { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--txb); }
+  .sav-item-label { font-family: var(--mono); font-size: 8px; color: var(--txd); margin-top: 2px; }
+
+  /* ── LOADING ── */
+  #loading {
+    display: flex; align-items: center; justify-content: center; height: 60vh;
+    font-family: var(--mono); font-size: 11px; color: var(--txd); letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">DataSaver Pro</div>
+      <div class="logo-page">Lifetime Statistics</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="installed-since" id="installedSince"></div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <svg id="themeIconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg id="themeIconSun" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg id="themeIconSystem" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+      </svg>
+    </button>
+    <button class="reset-btn" id="resetBtn">↺ Reset Stats</button>
+  </div>
+</div>
+
+<script>
+  // Apply theme BEFORE page paints to avoid flash
+  (function(){
+    try {
+      chrome.storage.sync.get({ theme: "system" }, function(r){
+        var t = r.theme || "system";
+        var h = document.documentElement;
+        if (t === "light") { h.setAttribute("data-theme","light"); }
+        else if (t === "dark") { h.removeAttribute("data-theme"); }
+        else {
+          if (!window.matchMedia("(prefers-color-scheme: dark)").matches) h.setAttribute("data-theme","light");
+        }
+      });
+    } catch(e){}
+  })();
+</script>
+
+<div id="loading">LOADING STATS...</div>
+
+<div class="page" id="mainPage" style="display:none;">
+
+  <!-- Savings estimate banner -->
+  <div class="savings-card">
+    <div class="sav-main">
+      <div class="sav-title">Estimated Data Saved (Lifetime)</div>
+      <div class="sav-num" id="savMB">0 MB</div>
+      <div class="sav-sub">Based on avg request sizes: images 150 KB · video 2 MB · scripts 80 KB · fonts 60 KB</div>
+    </div>
+    <div class="sav-breakdown">
+      <div class="sav-item">
+        <div class="sav-item-num" id="savImgMB">0</div>
+        <div class="sav-item-label">MB images</div>
+      </div>
+      <div class="sav-item">
+        <div class="sav-item-num" id="savVidMB">0</div>
+        <div class="sav-item-label">MB video</div>
+      </div>
+      <div class="sav-item">
+        <div class="sav-item-num" id="savOtherMB">0</div>
+        <div class="sav-item-label">MB other</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero numbers -->
+  <div class="section-title">All-Time Overview</div>
+  <div class="hero-grid">
+    <div class="hero-card" style="--accent-color: var(--accent)">
+      <div class="hero-label">Total Blocked</div>
+      <div class="hero-num" id="ltTotal">0</div>
+      <div class="hero-sub">requests intercepted</div>
+    </div>
+    <div class="hero-card" style="--accent-color: var(--green)">
+      <div class="hero-label">Blocked Today</div>
+      <div class="hero-num" id="todayTotal">0</div>
+      <div class="hero-sub">on <span id="todayDate">—</span></div>
+    </div>
+    <div class="hero-card" style="--accent-color: var(--purple)">
+      <div class="hero-label">Sites Tracked</div>
+      <div class="hero-num" id="siteCount">0</div>
+      <div class="hero-sub">unique domains</div>
+    </div>
+  </div>
+
+  <!-- Type breakdown -->
+  <div class="section-title">Lifetime by Type</div>
+  <div class="breakdown-grid">
+    <div class="bk-card">
+      <div class="bk-icon">🖼</div>
+      <div class="bk-num" id="ltImages">0</div>
+      <div class="bk-label">Images</div>
+    </div>
+    <div class="bk-card">
+      <div class="bk-icon">🎬</div>
+      <div class="bk-num" id="ltVideos">0</div>
+      <div class="bk-label">Videos</div>
+    </div>
+    <div class="bk-card">
+      <div class="bk-icon">📦</div>
+      <div class="bk-num" id="ltHeavy">0</div>
+      <div class="bk-label">Heavy</div>
+    </div>
+    <div class="bk-card">
+      <div class="bk-icon">⚙️</div>
+      <div class="bk-num" id="ltScripts">0</div>
+      <div class="bk-label">Scripts</div>
+    </div>
+    <div class="bk-card">
+      <div class="bk-icon">⬜</div>
+      <div class="bk-num" id="ltIframes">0</div>
+      <div class="bk-label">Iframes</div>
+    </div>
+  </div>
+
+  <!-- Two-col: history chart + today -->
+  <div class="two-col">
+
+    <!-- 30-day chart -->
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">30-Day History</div>
+      <div class="bar-chart" id="barChart">
+        <div class="empty-state" style="width:100%;">No history yet</div>
+      </div>
+    </div>
+
+    <!-- Today breakdown -->
+    <div class="card">
+      <div class="section-title" style="margin-bottom:14px;">Today's Breakdown</div>
+      <div class="today-rows" id="todayRows">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Top sites -->
+  <div class="section-title">Top Sites Tracked</div>
+  <div class="card">
+    <div class="sites-list" id="sitesList">
+      <div class="empty-state">No site data yet — keep browsing!</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="stats.js"></script>
+</body>
+</html>

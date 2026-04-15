@@ -1,0 +1,22 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Build artefacts / packaging
+*.zip
+*.crx
+*.pem
+
+# Node (if build tooling is ever added)
+node_modules/
+npm-debug.log*
+yarn-error.log*
